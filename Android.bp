@@ -1,0 +1,59 @@
+// Copyright (C) 2026 Vendor Example
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+// Android App for Data Broker
+// Note: JNI library is now provided by DbClientSDK (generic implementation)
+android_app {
+    name: "DbApp",
+
+    srcs: [
+        "src/**/*.kt",
+        "src/**/*.java",
+    ],
+
+    resource_dirs: [
+        "res",
+    ],
+
+    manifest: "AndroidManifest.xml",
+
+    sdk_version: "current",
+    // Use testkey certificate for 3rd party app simulation (not platform)
+    certificate: "testkey",
+
+    jni_libs: [
+        "libdb_client_jni",
+    ],
+
+    required: [
+        "libdb_client",
+    ],
+
+    static_libs: [
+        "DbClientSDK",  // Generic Data Broker Client SDK
+        "androidx.appcompat_appcompat",
+        "androidx.recyclerview_recyclerview",
+    ],
+
+    optimize: {
+        enabled: false,
+    },
+
+    dex_preopt: {
+        enabled: false,
+    },
+
+    // Embed native libraries in APK instead of extracting to /vendor/lib64
+    // This allows the app to load JNI libraries without SELinux restrictions
+    use_embedded_native_libs: true,
+
+    vendor: true,
+}
+
+// Phase 3.6: No custom SELinux contexts needed for TCP/IP
+// platform_app domain has sufficient permissions for localhost TCP connections

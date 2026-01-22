@@ -1,0 +1,3 @@
+# SELinux contexts for DbApp
+# Use default untrusted_app domain for 3rd party app simulation
+# This file is intentionally empty - let Android assign default untrusted_app domain

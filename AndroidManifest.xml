@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.dbapp">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Phase 3.8: OEM Privacy Permission (dangerous level - requires user consent) -->
+    <uses-permission android:name="oem.permission.PRIVACY_DATA" />
+
+    <!-- Phase 3.8: OEM Feature (optional) -->
+    <uses-feature android:name="oem.hardware.new-feature" android:required="false" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:theme="@android:style/Theme.Material.Light">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

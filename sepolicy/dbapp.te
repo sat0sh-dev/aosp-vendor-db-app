@@ -1,0 +1,8 @@
+# DbApp - 3rd party app with untrusted_app domain
+# Using default untrusted_app domain for realistic 3rd party app simulation
+
+# If UDS connection is used, untrusted_app needs permissions to connect to vendor daemon
+# This may be blocked by AOSP neverallow rules - to be tested
+
+# Note: Starting with default untrusted_app domain with no additional permissions
+# If connection fails, we may need to add specific permissions or use alternative approach
