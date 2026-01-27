@@ -52,7 +52,8 @@ android_app {
     // This allows the app to load JNI libraries without SELinux restrictions
     use_embedded_native_libs: true,
 
-    vendor: true,
+    // Product partition (OEM customization)
+    product_specific: true,
 }
 
 // Phase 3.6: No custom SELinux contexts needed for TCP/IP
