@@ -63,10 +63,23 @@ class MainActivity : Activity() {
      *
      * Note: Server (auth_hook) verifies permission via
      * 'cmd package check-permission' (Treble workaround)
+     *
+     * Note: Custom permission may not be defined in all builds.
+     * If not defined, skip permission check and proceed with attestation only.
      */
     private fun checkAndRequestPermission() {
         Log.i(TAG, "[Phase 3.8] Checking permission: $PERMISSION_PRIVACY_DATA")
         Log.i(TAG, "[Phase 3.8] Note: Server uses command-based check (Treble workaround)")
+
+        // Check if custom permission exists in this build
+        try {
+            packageManager.getPermissionInfo(PERMISSION_PRIVACY_DATA, 0)
+        } catch (e: PackageManager.NameNotFoundException) {
+            // Permission not defined in this build, skip check
+            Log.i(TAG, "[Phase 3.8] Custom permission not defined, skipping permission check")
+            startAutoTest()
+            return
+        }
 
         if (checkSelfPermission(PERMISSION_PRIVACY_DATA) == PackageManager.PERMISSION_GRANTED) {
             Log.i(TAG, "[Phase 3.8] Permission already granted")
