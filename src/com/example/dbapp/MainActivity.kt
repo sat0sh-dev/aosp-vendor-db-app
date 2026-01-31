@@ -2,6 +2,8 @@ package com.example.dbapp
 
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -9,6 +11,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.vendor.dbclient.DbClient
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
 import kotlin.concurrent.thread
 
 class MainActivity : Activity() {
@@ -51,6 +56,11 @@ class MainActivity : Activity() {
 
         findViewById<Button>(R.id.btn_list).setOnClickListener {
             onListClicked()
+        }
+
+        // Phase 3.10: UDS Test Button (experimental)
+        findViewById<Button>(R.id.btn_uds_test)?.setOnClickListener {
+            onUdsTestClicked()
         }
 
         // Phase 3.8: Check and request permission before connecting
@@ -289,5 +299,93 @@ class MainActivity : Activity() {
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Phase 3.10: UDS Connection Test (Experimental)
+     *
+     * Tests direct UDS connection from app to db_daemon.
+     * Uses Android's LocalSocket API.
+     */
+    private fun onUdsTestClicked() {
+        Log.i(TAG, "=== Phase 3.10: UDS Connection Test ===")
+        resultText.text = "[Phase 3.10] UDS Test\nConnecting..."
+
+        thread {
+            try {
+                val socketPath = "/data/misc/db/data_broker.sock"
+                Log.i(TAG, "Connecting to UDS: $socketPath")
+
+                val socket = LocalSocket()
+                val address = LocalSocketAddress(socketPath, LocalSocketAddress.Namespace.FILESYSTEM)
+
+                socket.connect(address)
+                Log.i(TAG, "UDS connected!")
+
+                val writer = PrintWriter(socket.outputStream, true)
+                val reader = BufferedReader(InputStreamReader(socket.inputStream))
+
+                // Send AUTH command with token (for Phase 3.10, we still need token auth)
+                val token = com.vendor.dbclient.AuthTokenProvider.generateToken(packageName)
+                val authCmd = "AUTH $packageName $token"
+                Log.i(TAG, "Sending AUTH command (token_len=${token.length})")
+                writer.println(authCmd)
+
+                val authResponse = reader.readLine()
+                Log.i(TAG, "AUTH response: $authResponse")
+
+                if (authResponse?.startsWith("OK:") != true) {
+                    runOnUiThread {
+                        resultText.text = """
+                            |[Phase 3.10] UDS Test
+                            |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                            |Connection: ✓ Success
+                            |Auth: ✗ Failed
+                            |Response: $authResponse
+                        """.trimMargin()
+                    }
+                    socket.close()
+                    return@thread
+                }
+
+                // Send LIST command
+                Log.i(TAG, "Sending LIST command")
+                writer.println("LIST")
+
+                val listResponse = reader.readLine()
+                Log.i(TAG, "LIST response: $listResponse")
+
+                socket.close()
+
+                runOnUiThread {
+                    resultText.text = """
+                        |[Phase 3.10] UDS Test SUCCESS!
+                        |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        |Socket: $socketPath
+                        |Connection: ✓ Success
+                        |Auth: ✓ Success
+                        |
+                        |Data:
+                        |$listResponse
+                    """.trimMargin()
+                }
+
+                Log.i(TAG, "=== UDS Test completed successfully ===")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "UDS Test failed: ${e.message}", e)
+                runOnUiThread {
+                    resultText.text = """
+                        |[Phase 3.10] UDS Test FAILED
+                        |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        |Error: ${e.message}
+                        |
+                        |Check:
+                        |1. SELinux: adb logcat | grep avc
+                        |2. Socket exists: adb shell ls -la /data/misc/db/
+                    """.trimMargin()
+                }
+            }
+        }
     }
 }
